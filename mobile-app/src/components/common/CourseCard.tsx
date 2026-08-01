@@ -1,8 +1,10 @@
 import React from 'react';
-import { StyleSheet } from 'react-native';
-import { Card as PaperCard, Title, Paragraph } from 'react-native-paper';
+import { StyleSheet, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Card as PaperCard, Text } from 'react-native-paper';
 import { Course } from '../../types';
 import { formatCurrency } from '../../utils/format';
+import { colors, radius, shadow, spacing } from '../../theme/design';
 
 interface CourseCardProps {
   course: Course;
@@ -10,59 +12,85 @@ interface CourseCardProps {
 }
 
 const CourseCard: React.FC<CourseCardProps> = ({ course, onPress }) => {
+  const lessonCount = course.chapters?.length || 0;
+  const priceLabel = course.price && course.price > 0 ? formatCurrency(course.price) : 'Free';
+
   return (
-    <PaperCard style={styles.card} onPress={onPress}>
-      {course.imageUrl && (
-        <PaperCard.Cover source={{ uri: course.imageUrl }} style={styles.cover} />
-      )}
-      <PaperCard.Content style={styles.content}>
-        <Title numberOfLines={2}>{course.title}</Title>
-        {course.description && (
-          <Paragraph numberOfLines={2} style={styles.description}>
-            {course.description}
-          </Paragraph>
-        )}
-        {course.category && (
-          <Paragraph style={styles.category}>{course.category.name}</Paragraph>
-        )}
-        {course.price !== undefined && course.price > 0 && (
-          <Title style={styles.price}>{formatCurrency(course.price)}</Title>
-        )}
-        {course.price === 0 && <Title style={styles.free}>Free</Title>}
-      </PaperCard.Content>
+    <PaperCard style={styles.card} onPress={onPress} mode="contained">
+      <View style={styles.row}>
+        <View style={styles.iconTile}>
+          <Ionicons name="book-outline" size={22} color={colors.navy} />
+        </View>
+
+        <View style={styles.content}>
+          {course.category && (
+            <Text variant="labelSmall" style={styles.category} numberOfLines={1}>
+              {course.category.name}
+            </Text>
+          )}
+          <Text variant="titleMedium" style={styles.title} numberOfLines={2}>
+            {course.title}
+          </Text>
+          <Text variant="bodySmall" style={styles.meta} numberOfLines={1}>
+            {lessonCount} {lessonCount === 1 ? 'lesson' : 'lessons'} · {priceLabel}
+          </Text>
+        </View>
+
+        <View style={styles.actionCircle}>
+          <Ionicons name="play" size={15} color={colors.navy} />
+        </View>
+      </View>
     </PaperCard>
   );
 };
 
 const styles = StyleSheet.create({
   card: {
-    marginBottom: 16,
-    elevation: 2,
+    marginBottom: spacing.md,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
+    ...shadow.card,
   },
-  cover: {
-    height: 150,
+  row: {
+    minHeight: 82,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
+  },
+  iconTile: {
+    width: 48,
+    height: 48,
+    borderRadius: radius.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.tealSoft,
+    marginRight: spacing.md,
   },
   content: {
-    paddingTop: 12,
-  },
-  description: {
-    color: '#666',
-    marginTop: 4,
+    flex: 1,
+    minWidth: 0,
   },
   category: {
-    color: '#6366f1',
-    fontSize: 12,
-    marginTop: 8,
+    color: colors.muted,
+    marginBottom: 2,
   },
-  price: {
-    color: '#16a34a',
-    marginTop: 8,
-    fontSize: 20,
+  title: {
+    color: colors.text,
+    fontWeight: '700',
+    lineHeight: 20,
   },
-  free: {
-    color: '#16a34a',
-    marginTop: 8,
-    fontSize: 20,
+  meta: {
+    color: colors.muted,
+    marginTop: 4,
+  },
+  actionCircle: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.faint,
+    marginLeft: spacing.md,
   },
 });
 

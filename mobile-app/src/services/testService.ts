@@ -1,4 +1,4 @@
-import { TestSeries, TestChapter, Test, Question, TestAttempt, Answer, ApiResponse } from '../types';
+import { TestSeries, TestChapter, Test, Question, TestAttempt, Answer, Attachment, ApiResponse } from '../types';
 import apiService from './api';
 
 export const testService = {
@@ -6,6 +6,7 @@ export const testService = {
   getTestSeries: async (params?: {
     categoryId?: string;
     title?: string;
+    mine?: boolean;
   }): Promise<TestSeries[]> => {
     return apiService.get('/api/testseries', params);
   },
@@ -17,12 +18,12 @@ export const testService = {
 
   // Get test chapters
   getTestChapters: async (testSeriesId: string): Promise<TestChapter[]> => {
-    return apiService.get(`/api/testseries/${testSeriesId}/chapters`);
+    return apiService.get(`/api/testseries/${testSeriesId}/testChapter`);
   },
 
   // Get tests for a chapter
   getTests: async (testChapterId: string): Promise<Test[]> => {
-    return apiService.get(`/api/testseries/chapters/${testChapterId}/tests`);
+    return apiService.get(`/api/testseries/testChapter/${testChapterId}/tests`);
   },
 
   // Get test by ID
@@ -68,6 +69,47 @@ export const testService = {
     return apiService.get('/api/testseries/attempts', params);
   },
 
+  // Teacher: Get test series owned by current teacher
+  getTeacherTestSeries: async (): Promise<TestSeries[]> => {
+    return apiService.get('/api/testseries', { mine: true });
+  },
+
+  // Teacher: Create test chapter
+  createTestChapter: async (testSeriesId: string, data: Partial<TestChapter>): Promise<TestChapter> => {
+    return apiService.post(`/api/testseries/${testSeriesId}/testChapter`, data);
+  },
+
+  // Teacher: Update test chapter
+  updateTestChapter: async (
+    testSeriesId: string,
+    testChapterId: string,
+    data: Partial<TestChapter>
+  ): Promise<TestChapter> => {
+    return apiService.patch(`/api/testseries/${testSeriesId}/testChapter/${testChapterId}`, data);
+  },
+
+  // Teacher: Delete test chapter
+  deleteTestChapter: async (testSeriesId: string, testChapterId: string): Promise<void> => {
+    return apiService.delete(`/api/testseries/${testSeriesId}/testChapter/${testChapterId}`);
+  },
+
+  // Teacher: Add test chapter attachment/question paper
+  addTestChapterAttachment: async (
+    testSeriesId: string,
+    testChapterId: string,
+    data: { url: string; name?: string }
+  ): Promise<Attachment> => {
+    return apiService.post(`/api/testseries/${testSeriesId}/testChapter/${testChapterId}/attachments`, data);
+  },
+
+  // Teacher: Delete test chapter attachment/question paper
+  deleteTestChapterAttachment: async (
+    testSeriesId: string,
+    testChapterId: string,
+    attachmentId: string
+  ): Promise<void> => {
+    return apiService.delete(`/api/testseries/${testSeriesId}/testChapter/${testChapterId}/attachments/${attachmentId}`);
+  },
   // Teacher: Create test series
   createTestSeries: async (data: Partial<TestSeries>): Promise<TestSeries> => {
     return apiService.post('/api/testseries', data);
@@ -80,7 +122,7 @@ export const testService = {
 
   // Teacher: Create test
   createTest: async (testChapterId: string, data: Partial<Test>): Promise<Test> => {
-    return apiService.post(`/api/testseries/chapters/${testChapterId}/tests`, data);
+    return apiService.post(`/api/testseries/testChapter/${testChapterId}/tests`, data);
   },
 
   // Teacher: Create question

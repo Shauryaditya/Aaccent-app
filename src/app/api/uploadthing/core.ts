@@ -28,11 +28,8 @@ export const ourFileRouter = {
     .middleware(() => handleAuth())
     .onUploadComplete(()=> {}),
     testChapterAttachment: f({
-        text: { maxFileSize: "16MB" },
-        image: { maxFileSize: "16MB" },
-        video: { maxFileSize: "16MB" },
-        audio: { maxFileSize: "16MB" },
         pdf: { maxFileSize: "16MB" },
+        blob: { maxFileSize: "16MB" },
       })
     .middleware(() => handleAuth())
     .onUploadComplete(() => {}),

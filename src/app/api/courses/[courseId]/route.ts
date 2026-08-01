@@ -1,12 +1,68 @@
 import Mux from "@mux/mux-node";
 import { auth } from "@clerk/nextjs";
 import { NextResponse } from "next/server";
+
 import { db } from "@/lib/db";
 
 const mux = new Mux({
-  tokenId: process.env['MUX_TOKEN_ID'],
-  tokenSecret: process.env['MUX_TOKEN_SECRET'],
+  tokenId: process.env["MUX_TOKEN_ID"],
+  tokenSecret: process.env["MUX_TOKEN_SECRET"],
 });
+
+export async function GET(
+  req: Request,
+  { params }: { params: { courseId: string } }
+) {
+  try {
+    const { userId } = auth();
+
+    const course = await db.course.findUnique({
+      where: {
+        id: params.courseId,
+      },
+      include: {
+        category: true,
+        attachments: true,
+        purchases: userId ? { where: { userId } } : false,
+        chapters: {
+          include: {
+            muxData: true,
+            attachments: true,
+            userProgress: userId ? { where: { userId } } : false,
+          },
+          orderBy: {
+            position: "asc",
+          },
+        },
+      },
+    });
+
+    if (!course) {
+      return new NextResponse("Course not found", { status: 404 });
+    }
+
+    if (!course.isPublished && course.userId !== userId) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const publishedChapters = course.chapters.filter((chapter) => chapter.isPublished);
+    const completedChapters = publishedChapters.filter(
+      (chapter) => chapter.userProgress?.[0]?.isCompleted
+    );
+    const progress = publishedChapters.length === 0
+      ? 0
+      : Math.round((completedChapters.length / publishedChapters.length) * 100);
+    const canAccessProgress = course.userId === userId || course.purchases.length > 0;
+
+    return NextResponse.json({
+      ...course,
+      progress: canAccessProgress ? progress : undefined,
+    });
+  } catch (error) {
+    console.log("[COURSE_ID_GET]", error);
+    return new NextResponse("Internal Error", { status: 500 });
+  }
+}
 
 export async function DELETE(
   req: Request,
@@ -14,7 +70,6 @@ export async function DELETE(
 ) {
   try {
     const { userId } = auth();
-    const { courseId } = params;
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
@@ -23,7 +78,7 @@ export async function DELETE(
     const course = await db.course.findUnique({
       where: {
         id: params.courseId,
-        userId: userId,
+        userId,
       },
       include: {
         chapters: {
@@ -34,7 +89,7 @@ export async function DELETE(
       },
     });
 
-    if(!course){
+    if (!course) {
       return new NextResponse("Course not found", { status: 404 });
     }
 
@@ -44,7 +99,6 @@ export async function DELETE(
           await mux.video.assets.delete(chapter.muxData.assetId);
         } catch (error) {
           console.log("[MUX_ASSET_DELETE_ERROR]", error);
-          // Continue deleting other assets/course even if one fails
         }
       }
     }
@@ -52,22 +106,22 @@ export async function DELETE(
     const deletedCourse = await db.course.delete({
       where: {
         id: params.courseId,
-      }
-    })
+      },
+    });
 
-  return NextResponse.json(deletedCourse)
+    return NextResponse.json(deletedCourse);
   } catch (error) {
-    console.log("[COURSE_ID_DELETE", error);
+    console.log("[COURSE_ID_DELETE]", error);
     return new NextResponse("Internal Error", { status: 500 });
   }
 }
+
 export async function PATCH(
   req: Request,
   { params }: { params: { courseId: string } }
 ) {
   try {
     const { userId } = auth();
-    const { courseId } = params;
     const values = await req.json();
 
     if (!userId) {
@@ -76,7 +130,7 @@ export async function PATCH(
 
     const course = await db.course.update({
       where: {
-        id: courseId,
+        id: params.courseId,
         userId,
       },
       data: {

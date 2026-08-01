@@ -1,0 +1,118 @@
+Browserslist: browsers data (caniuse-lite) is 6 months old. Please run:
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+ ⨯ node_modules\@clerk\nextjs\dist\esm\server\createGetAuth.js (26:12) @ eval
+ ⨯ Error: Clerk: auth() was called but Clerk can't detect usage of authMiddleware(). Please ensure the following:
+- authMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/docs/quickstarts/nextjs
+
+    at Home (./src/app/page.tsx:27:75)
+    at stringify (<anonymous>)
+null
+ ⨯ node_modules\@clerk\nextjs\dist\esm\server\createGetAuth.js (26:12) @ eval
+ ⨯ Error: Clerk: auth() was called but Clerk can't detect usage of authMiddleware(). Please ensure the following:
+- authMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/docs/quickstarts/nextjs
+
+    at Home (./src/app/page.tsx:27:75)
+    at stringify (<anonymous>)
+digest: "2037100013"
+null
+ ⨯ node_modules\@clerk\nextjs\dist\esm\server\createGetAuth.js (26:12) @ eval
+ ⨯ Error: Clerk: auth() was called but Clerk can't detect usage of authMiddleware(). Please ensure the following:
+- authMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/docs/quickstarts/nextjs
+
+    at Home (./src/app/page.tsx:27:75)
+    at stringify (<anonymous>)
+null
+ ⨯ node_modules\@clerk\nextjs\dist\esm\server\createGetAuth.js (26:12) @ eval
+ ⨯ Error: Clerk: auth() was called but Clerk can't detect usage of authMiddleware(). Please ensure the following:
+- authMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/docs/quickstarts/nextjs
+
+    at Home (./src/app/page.tsx:27:75)
+    at stringify (<anonymous>)
+digest: "2037100013"
+null
+ ⨯ node_modules\@clerk\nextjs\dist\esm\server\createGetAuth.js (26:12) @ eval
+ ⨯ Error: Clerk: auth() was called but Clerk can't detect usage of authMiddleware(). Please ensure the following:
+- authMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/docs/quickstarts/nextjs
+
+    at Home (./src/app/page.tsx:27:75)
+    at stringify (<anonymous>)
+null
+ ⨯ node_modules\@clerk\nextjs\dist\esm\server\createGetAuth.js (26:12) @ eval
+ ⨯ Error: Clerk: auth() was called but Clerk can't detect usage of authMiddleware(). Please ensure the following:
+- authMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/docs/quickstarts/nextjs
+
+    at Home (./src/app/page.tsx:27:75)
+    at stringify (<anonymous>)
+digest: "2037100013"
+null
+ ⨯ node_modules\@clerk\nextjs\dist\esm\server\createGetAuth.js (26:12) @ eval
+ ⨯ Error: Clerk: auth() was called but Clerk can't detect usage of authMiddleware(). Please ensure the following:
+- authMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/docs/quickstarts/nextjs
+
+    at Home (./src/app/page.tsx:27:75)
+    at stringify (<anonymous>)
+null
+ ⨯ node_modules\@clerk\nextjs\dist\esm\server\createGetAuth.js (26:12) @ eval
+ ⨯ Error: Clerk: auth() was called but Clerk can't detect usage of authMiddleware(). Please ensure the following:
+- authMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/docs/quickstarts/nextjs
+
+    at Home (./src/app/page.tsx:27:75)
+    at stringify (<anonymous>)
+digest: "2037100013"
+null
+ ⨯ node_modules\@clerk\nextjs\dist\esm\server\createGetAuth.js (26:12) @ eval
+ ⨯ Error: Clerk: auth() was called but Clerk can't detect usage of authMiddleware(). Please ensure the following:
+- authMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/docs/quickstarts/nextjs
+
+    at Home (./src/app/page.tsx:27:75)
+    at stringify (<anonymous>)
+null
+ ⨯ node_modules\@clerk\nextjs\dist\esm\server\createGetAuth.js (26:12) @ eval
+ ⨯ Error: Clerk: auth() was called but Clerk can't detect usage of authMiddleware(). Please ensure the following:
+- authMiddleware() is used in your Next.js Middleware.
+- Your Middleware matcher is configured to match this route or page.
+- If you are using the src directory, make sure the Middleware file is inside of it.
+
+For more details, see https://clerk.com/docs/quickstarts/nextjs
+
+    at Home (./src/app/page.tsx:27:75)
+    at stringify (<anonymous>)
+digest: "2037100013"
+null

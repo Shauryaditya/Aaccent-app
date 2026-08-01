@@ -1,38 +1,34 @@
-{
-  "expo": {
-    "name": "LMS Mobile",
-    "slug": "lms-mobile-app",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/icon.png",
-    "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.lms.mobileapp"
-    },
-    "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
-      "package": "com.lms.mobileapp"
-    },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
-    "plugins": [
-      "expo-secure-store"
-    ],
-    "extra": {
-      "clerkPublishableKey": "YOUR_CLERK_PUBLISHABLE_KEY"
-    }
-  }
+﻿{
+    "expo":  {
+                 "name":  "LMS Mobile",
+                 "slug":  "lms-mobile-app",
+                 "version":  "1.0.0",
+                 "orientation":  "portrait",
+                 "icon":  "./assets/logo.png",
+                 "userInterfaceStyle":  "automatic",
+                 "assetBundlePatterns":  [
+                                             "**/*"
+                                         ],
+                 "ios":  {
+                             "supportsTablet":  true,
+                             "bundleIdentifier":  "com.lms.mobileapp"
+                         },
+                 "android":  {
+                                 "adaptiveIcon":  {
+                                                      "foregroundImage":  "./assets/logo.png",
+                                                      "backgroundColor":  "#ffffff"
+                                                  },
+                                 "package":  "com.lms.mobileapp"
+                             },
+                 "web":  {
+                             "favicon":  "./assets/logo.png"
+                         },
+                 "plugins":  [
+                                 "expo-secure-store"
+                             ],
+                 "extra":  {
+                               "clerkPublishableKey":  "pk_test_c2hpbmluZy1tb29zZS0zNS5jbGVyay5hY2NvdW50cy5kZXYk",
+                               "apiBaseUrl":  "http://192.168.1.11:3000"
+                           }
+             }
 }

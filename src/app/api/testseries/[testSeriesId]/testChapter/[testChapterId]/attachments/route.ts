@@ -11,7 +11,7 @@ export async function POST(
 ) {
   try {
     const { userId } = auth();
-    const { url } = await req.json();
+    const { url, name } = await req.json();
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
@@ -28,10 +28,14 @@ export async function POST(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
+    if (!url) {
+      return new NextResponse("URL is required", { status: 400 });
+    }
+
     const attachment = await db.attachment.create({
       data: {
         url,
-        name: url.split("/").pop() || "attachment",
+        name: typeof name === "string" && name.trim() ? name.trim() : url.split("/").pop() || "attachment",
         testChapterId: params.testChapterId,  
       }
     });

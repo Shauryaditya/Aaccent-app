@@ -6,7 +6,7 @@ const TakeTestScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <EmptyState
-        icon="clipboard-check"
+        icon="clipboard-outline"
         title="Take Test"
         message="Test taking interface to be implemented"
       />

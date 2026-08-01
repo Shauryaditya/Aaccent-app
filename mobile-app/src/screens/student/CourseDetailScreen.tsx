@@ -1,16 +1,18 @@
 import React from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
-import { Text, Button } from 'react-native-paper';
+import { View, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { Text, Button, IconButton } from 'react-native-paper';
 import { useRoute, useNavigation, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { useQuery } from '@tanstack/react-query';
-import { StudentStackParamList, Course } from '../../types';
+import * as WebBrowser from 'expo-web-browser';
+import { StudentStackParamList, Attachment, Chapter, Course } from '../../types';
 import { courseService } from '../../services/courseService';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ChapterCard from '../../components/common/ChapterCard';
 import ProgressBar from '../../components/common/ProgressBar';
 import { formatCurrency } from '../../utils/format';
 import { showToast } from '../../utils/helpers';
+import { colors, radius, shadow, spacing } from '../../theme/design';
 
 type RouteProps = RouteProp<StudentStackParamList, 'CourseDetail'>;
 type NavigationProp = NativeStackNavigationProp<StudentStackParamList>;
@@ -33,20 +35,25 @@ const CourseDetailScreen: React.FC = () => {
     navigation.navigate('ChapterView', { chapterId, courseId });
   };
 
+  const openUrl = async (url: string) => {
+    try {
+      await WebBrowser.openBrowserAsync(url);
+    } catch (error) {
+      showToast('error', 'Could not open attachment');
+    }
+  };
+
   if (isLoading || !course) {
     return <LoadingSpinner message="Loading course details..." />;
   }
 
   const isPurchased = course.progress !== undefined;
   const chapters = course.chapters || [];
+  const attachments = course.attachments || [];
 
   return (
-    <ScrollView style={styles.container}>
-      {course.imageUrl && (
-        <View style={styles.imageContainer}>
-          {/* Course image would go here */}
-        </View>
-      )}
+    <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent}>
+      {course.imageUrl && <View style={styles.imageContainer} />}
 
       <View style={styles.content}>
         <Text variant="headlineMedium" style={styles.title}>
@@ -85,6 +92,26 @@ const CourseDetailScreen: React.FC = () => {
           </View>
         )}
 
+        {attachments.length > 0 && (
+          <View style={styles.attachmentsContainer}>
+            <Text variant="titleMedium" style={styles.sectionTitle}>Course Attachments</Text>
+            {attachments.map((attachment: Attachment) => (
+              <Pressable key={attachment.id} style={styles.attachment} onPress={() => openUrl(attachment.url)}>
+                <View style={styles.attachmentIcon}>
+                  <IconButton icon="file-document-outline" size={20} iconColor={colors.navy} />
+                </View>
+                <View style={styles.attachmentBody}>
+                  <Text variant="bodyMedium" style={styles.attachmentName} numberOfLines={1}>
+                    {attachment.name || 'Attachment'}
+                  </Text>
+                  <Text variant="bodySmall" style={styles.attachmentMeta}>Tap to open</Text>
+                </View>
+                <IconButton icon="open-in-new" size={18} iconColor={colors.muted} />
+              </Pressable>
+            ))}
+          </View>
+        )}
+
         <View style={styles.chaptersContainer}>
           <Text variant="titleLarge" style={styles.chaptersTitle}>
             Course Content
@@ -93,7 +120,7 @@ const CourseDetailScreen: React.FC = () => {
             {chapters.length} {chapters.length === 1 ? 'chapter' : 'chapters'}
           </Text>
 
-          {chapters.map((chapter) => (
+          {chapters.map((chapter: Chapter) => (
             <ChapterCard
               key={chapter.id}
               chapter={chapter}
@@ -110,64 +137,114 @@ const CourseDetailScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: colors.background,
+  },
+  scrollContent: {
+    paddingBottom: spacing.xl,
   },
   imageContainer: {
     height: 200,
     backgroundColor: '#e5e7eb',
   },
   content: {
-    padding: 16,
+    padding: spacing.lg,
   },
   title: {
-    marginBottom: 8,
-    fontWeight: 'bold',
+    marginBottom: spacing.sm,
+    fontWeight: '800',
+    color: colors.text,
   },
   category: {
-    color: '#6366f1',
-    marginBottom: 12,
+    color: colors.blue,
+    marginBottom: spacing.md,
   },
   description: {
     color: '#4b5563',
-    marginBottom: 16,
+    marginBottom: spacing.lg,
     lineHeight: 24,
   },
   progressContainer: {
-    marginBottom: 24,
-    padding: 16,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    elevation: 1,
+    marginBottom: spacing.xl,
+    padding: spacing.lg,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.line,
+    ...shadow.card,
   },
   progressTitle: {
-    marginBottom: 12,
+    marginBottom: spacing.md,
+    fontWeight: '700',
   },
   priceContainer: {
-    marginBottom: 24,
-    padding: 16,
-    backgroundColor: '#fff',
-    borderRadius: 8,
-    elevation: 2,
+    marginBottom: spacing.xl,
+    padding: spacing.lg,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.line,
     alignItems: 'center',
+    ...shadow.card,
   },
   price: {
-    color: '#16a34a',
-    marginBottom: 16,
-    fontWeight: 'bold',
+    color: colors.success,
+    marginBottom: spacing.lg,
+    fontWeight: '800',
   },
   enrollButton: {
     width: '100%',
+    borderRadius: radius.sm,
+  },
+  attachmentsContainer: {
+    marginBottom: spacing.xl,
+    padding: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: colors.line,
+    ...shadow.card,
+  },
+  sectionTitle: {
+    marginBottom: spacing.sm,
+    fontWeight: '800',
+    color: colors.text,
+  },
+  attachment: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: spacing.sm,
+  },
+  attachmentIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: radius.sm,
+    backgroundColor: colors.blueSoft,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.sm,
+  },
+  attachmentBody: {
+    flex: 1,
+  },
+  attachmentName: {
+    color: colors.text,
+    fontWeight: '600',
+  },
+  attachmentMeta: {
+    color: colors.muted,
+    marginTop: 2,
   },
   chaptersContainer: {
-    marginTop: 8,
+    marginTop: spacing.sm,
   },
   chaptersTitle: {
     marginBottom: 4,
-    fontWeight: 'bold',
+    fontWeight: '800',
+    color: colors.text,
   },
   chaptersSubtitle: {
-    color: '#666',
-    marginBottom: 16,
+    color: colors.muted,
+    marginBottom: spacing.lg,
   },
 });
 

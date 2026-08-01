@@ -8,17 +8,20 @@ export async function POST(
 ) {
   try {
     const { userId } = auth();
-    const { url } = await req.json();
+    const { url, name } = await req.json();
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    // Check if the user owns the course
+    if (!url || !String(url).trim()) {
+      return new NextResponse("Attachment URL is required", { status: 400 });
+    }
+
     const courseOwner = await db.course.findUnique({
       where: {
         id: params.courseId,
-        userId: userId,
+        userId,
       },
     });
 
@@ -26,20 +29,16 @@ export async function POST(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    // Create the attachment and associate it with the specified chapter
     const attachment = await db.attachment.create({
       data: {
-        url,
-        name: url.split("/").pop(), // Extract the file name from the URL
+        url: String(url).trim(),
+        name: name?.trim() || String(url).split("/").pop() || "Attachment",
         courseId: params.courseId,
-        chapterId: params.chapterId, // Add chapter ID to associate with the chapter
+        chapterId: params.chapterId,
       },
     });
 
-    return new NextResponse(JSON.stringify(attachment), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    return NextResponse.json(attachment);
   } catch (error) {
     console.log("COURSE_ATTACHMENT_ERROR:", error);
     return new NextResponse("Internal Error", { status: 500 });

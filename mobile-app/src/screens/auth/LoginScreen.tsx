@@ -1,21 +1,33 @@
 import React from 'react';
 import { View, StyleSheet, Image } from 'react-native';
 import { Text, Button } from 'react-native-paper';
-import { SignedIn, SignedOut, useAuth } from '@clerk/clerk-expo';
+import { useOAuth } from '@clerk/clerk-expo';
 import * as WebBrowser from 'expo-web-browser';
+import Toast from 'react-native-toast-message';
 
 WebBrowser.maybeCompleteAuthSession();
 
 const LoginScreen: React.FC = () => {
-  const { signIn } = useAuth();
+  const { startOAuthFlow } = useOAuth({ strategy: 'oauth_google' });
+  const [isSigningIn, setIsSigningIn] = React.useState(false);
 
   const handleSignIn = async () => {
+    setIsSigningIn(true);
     try {
-      // Clerk will handle the OAuth flow
-      // This is a simplified version - you'll need to implement full OAuth flow
-      // or use Clerk's built-in components
+      const { createdSessionId, setActive } = await startOAuthFlow();
+
+      if (createdSessionId && setActive) {
+        await setActive({ session: createdSessionId });
+      }
     } catch (error) {
       console.error('Sign in error:', error);
+      Toast.show({
+        type: 'error',
+        text1: 'Sign in failed',
+        text2: 'Check Clerk OAuth settings and try again.',
+      });
+    } finally {
+      setIsSigningIn(false);
     }
   };
 
@@ -23,7 +35,7 @@ const LoginScreen: React.FC = () => {
     <View style={styles.container}>
       <View style={styles.content}>
         <Image
-          source={require('../../../assets/icon.png')}
+          source={require('../../../assets/logo.jpeg')}
           style={styles.logo}
           resizeMode="contain"
         />
@@ -38,14 +50,15 @@ const LoginScreen: React.FC = () => {
           <Button
             mode="contained"
             onPress={handleSignIn}
+            loading={isSigningIn}
+            disabled={isSigningIn}
             style={styles.button}
             contentStyle={styles.buttonContent}
           >
-            Sign In with Clerk
+            Sign In with Google
           </Button>
           <Text variant="bodySmall" style={styles.note}>
-            Note: This screen needs to be integrated with Clerk's authentication flow.
-            Please refer to Clerk documentation for React Native setup.
+            Use the same account you use on the LMS web app.
           </Text>
         </View>
       </View>

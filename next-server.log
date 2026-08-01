@@ -1,0 +1,30 @@
+
+> learning-platform@0.1.0 dev
+> next dev -H 0.0.0.0
+
+   ▲ Next.js 14.1.0
+   - Local:        http://localhost:3000
+   - Network:      http://0.0.0.0:3000
+   - Environments: .env
+
+ ✓ (pwa) Compiling for server...
+ ✓ (pwa) Compiling for server...
+ ✓ (pwa) Compiling for client (static)...
+ ○ (pwa) Service worker: C:\Users\SANKHA\OneDrive\Desktop\AaccentApp\public\sw.js
+ ○ (pwa)   URL: /sw.js
+ ○ (pwa)   Scope: /
+ ○ (pwa) Building in development mode, caching and precaching are disabled for the most part. This means that offline support is disabled, but you can continue developing other functions in service worker.
+ ✓ Ready in 4.4s
+ ○ Compiling /src/middleware ...
+ ✓ Compiled /src/middleware in 540ms (285 modules)
+ ○ Compiling /api/courses ...
+ ✓ Compiled /api/courses in 643ms (180 modules)
+ ✓ Compiled /api/testseries in 337ms (180 modules)
+ ✓ Compiled /api/testseries/[testSeriesId]/testChapter in 95ms (182 modules)
+ ✓ Compiled /api/courses in 222ms (180 modules)
+ ✓ Compiled /api/testseries in 80ms (182 modules)
+ ✓ Compiled in 318ms (467 modules)
+ ○ Compiling / ...
+ ✓ Compiled / in 3.2s (1680 modules)
+ ✓ Compiled in 851ms (754 modules)
+[?25h

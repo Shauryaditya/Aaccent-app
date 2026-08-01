@@ -9,6 +9,7 @@ import { courseService } from '../../services/courseService';
 import CourseCard from '../../components/common/CourseCard';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import EmptyState from '../../components/common/EmptyState';
+import { colors, spacing } from '../../theme/design';
 
 type NavigationProp = NativeStackNavigationProp<StudentStackParamList>;
 
@@ -19,10 +20,10 @@ const MyCoursesScreen: React.FC = () => {
     data: courses = [],
     isLoading,
     refetch,
-    isRefreshing,
+    isFetching,
   } = useQuery<Course[]>({
-    queryKey: ['my-courses'],
-    queryFn: courseService.getPurchasedCourses,
+    queryKey: ['course-library'],
+    queryFn: () => courseService.getCourses(),
   });
 
   const handleCoursePress = (courseId: string) => {
@@ -30,21 +31,21 @@ const MyCoursesScreen: React.FC = () => {
   };
 
   if (isLoading) {
-    return <LoadingSpinner message="Loading your courses..." />;
+    return <LoadingSpinner message="Loading courses..." />;
   }
 
   return (
     <View style={styles.container}>
       <ScrollView
         style={styles.scrollView}
-        refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={refetch} />}
+        refreshControl={<RefreshControl refreshing={isFetching} onRefresh={refetch} />}
       >
         <View style={styles.header}>
-          <Text variant="headlineMedium" style={styles.title}>
-            My Courses
+          <Text variant="headlineSmall" style={styles.title}>
+            Course Library
           </Text>
           <Text variant="bodyMedium" style={styles.subtitle}>
-            {courses.length} {courses.length === 1 ? 'course' : 'courses'} enrolled
+            {courses.length} {courses.length === 1 ? 'course' : 'courses'} available
           </Text>
         </View>
 
@@ -52,13 +53,11 @@ const MyCoursesScreen: React.FC = () => {
           {courses.length === 0 ? (
             <EmptyState
               icon="book-outline"
-              title="No courses yet"
-              message="Start learning by enrolling in a course"
-              actionLabel="Browse Courses"
-              onAction={() => navigation.navigate('Home')}
+              title="No courses found"
+              message="Published courses will appear here."
             />
           ) : (
-            courses.map((course) => (
+            courses.map((course: Course) => (
               <CourseCard
                 key={course.id}
                 course={course}
@@ -75,26 +74,28 @@ const MyCoursesScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#f9fafb',
+    backgroundColor: colors.background,
   },
   scrollView: {
     flex: 1,
   },
   header: {
-    padding: 16,
-    backgroundColor: '#fff',
-    elevation: 2,
-    marginBottom: 8,
+    paddingHorizontal: spacing.lg,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.md,
+    backgroundColor: colors.background,
   },
   title: {
     marginBottom: 4,
-    fontWeight: 'bold',
+    fontWeight: '700',
+    color: colors.text,
   },
   subtitle: {
-    color: '#666',
+    color: colors.muted,
   },
   coursesContainer: {
-    padding: 16,
+    padding: spacing.lg,
+    paddingTop: spacing.sm,
   },
 });
 

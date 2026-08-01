@@ -1,9 +1,20 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import Constants from 'expo-constants';
-import * as SecureStore from 'expo-secure-store';
 
 // Get API base URL from environment
 const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl || 'http://localhost:3000';
+
+type AuthTokenGetter = () => Promise<string | null>;
+
+let authTokenGetter: AuthTokenGetter | null = null;
+
+export const setAuthTokenGetter = (getter: AuthTokenGetter | null) => {
+  authTokenGetter = getter;
+};
+
+export const getAuthToken = async () => {
+  return authTokenGetter ? authTokenGetter() : null;
+};
 
 class ApiService {
   private api: AxiosInstance;
@@ -21,7 +32,7 @@ class ApiService {
     this.api.interceptors.request.use(
       async (config) => {
         try {
-          const token = await SecureStore.getItemAsync('clerk_token');
+          const token = authTokenGetter ? await authTokenGetter() : null;
           if (token) {
             config.headers.Authorization = `Bearer ${token}`;
           }
@@ -99,3 +110,5 @@ class ApiService {
 
 export const apiService = new ApiService();
 export default apiService;
+
+

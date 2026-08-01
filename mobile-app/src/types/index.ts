@@ -24,6 +24,7 @@ export interface Course {
   categoryId?: string;
   category?: Category;
   chapters?: Chapter[];
+  attachments?: Attachment[];
   progress?: number;
   createdAt: string;
   updatedAt: string;
@@ -103,8 +104,10 @@ export interface TestChapter {
   position: number;
   isPublished: boolean;
   testSeriesId: string;
+  testSeries?: TestSeries;
   tests?: Test[];
   attachments?: Attachment[];
+  submissions?: TestSubmission[];
   createdAt: string;
   updatedAt: string;
 }
@@ -295,10 +298,10 @@ export type StudentStackParamList = {
   StudentTabs: undefined;
   CourseDetail: { courseId: string };
   ChapterView: { chapterId: string; courseId: string };
-  TestDetail: { testId: string };
+  TestDetail: { testSeriesId: string };
   TakeTest: { testId: string };
   TestResult: { attemptId: string };
-  SubmitAssignment: { chapterId: string };
+  SubmitAssignment: { testSeriesId?: string; testChapterId?: string; chapterId?: string };
   Resources: undefined;
 };
 
@@ -316,3 +319,10 @@ export type TeacherStackParamList = {
   StudentProgress: { studentId: string };
   AssignGoal: { studentId: string };
 };
+
+
+
+
+
+
+

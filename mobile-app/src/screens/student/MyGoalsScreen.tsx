@@ -11,7 +11,7 @@ import GoalCard from '../../components/common/GoalCard';
 const MyGoalsScreen: React.FC = () => {
   const { data: goals = [], isLoading } = useQuery<Goal[]>({
     queryKey: ['my-goals'],
-    queryFn: goalService.getMyGoals,
+    queryFn: () => goalService.getMyGoals(),
   });
 
   if (isLoading) {
@@ -38,7 +38,7 @@ const MyGoalsScreen: React.FC = () => {
               message="Your teacher will assign goals to help track your progress"
             />
           ) : (
-            goals.map((goal) => <GoalCard key={goal.id} goal={goal} />)
+            goals.map((goal: Goal) => <GoalCard key={goal.id} goal={goal} />)
           )}
         </View>
       </ScrollView>
