@@ -1,12 +1,23 @@
 import { authMiddleware } from "@clerk/nextjs";
 import { NextRequest, NextResponse } from "next/server";
 
+// UploadThing calls back into /api/uploadthing from its own servers to run
+// onUploadComplete. That request carries no Clerk session, so Clerk would 401 it.
+// It is authenticated instead by an HMAC signature that the UploadThing SDK verifies
+// itself, so we let it past the auth middleware and leave verification to the route.
+const isUploadThingCallback = (req: NextRequest) =>
+  req.nextUrl.pathname.startsWith("/api/uploadthing") &&
+  req.method === "POST" &&
+  req.headers.has("uploadthing-hook") &&
+  req.headers.has("x-uploadthing-signature");
+
 const isPublicRequest = (req: NextRequest) => {
   const { pathname, searchParams } = req.nextUrl;
   const isGet = req.method === "GET";
 
   if (pathname === "/") return true;
   if (pathname.startsWith("/api/webhook")) return true;
+  if (isUploadThingCallback(req)) return true;
 
   if (pathname === "/api/courses") {
     return isGet && searchParams.get("mine") !== "true";
@@ -27,6 +38,7 @@ const shouldSkipClerk = (req: NextRequest) => {
   const isGet = req.method === "GET";
 
   if (pathname.startsWith("/api/webhook")) return true;
+  if (isUploadThingCallback(req)) return true;
 
   if (pathname === "/api/courses") {
     return isGet && searchParams.get("mine") !== "true";

@@ -23,13 +23,13 @@ export async function GET(
             attachments: true,
             submissions: userId ? { where: { userId } } : false,
             tests: {
-              where: userId ? undefined : { isPublished: true },
               orderBy: { position: "asc" },
               include: {
-                questions: {
-                  orderBy: { position: "asc" },
-                  include: { options: { orderBy: { position: "asc" } } },
-                },
+                // Question bodies are deliberately NOT included here — this endpoint is
+                // readable by any student, and options carry `isCorrect`. Taking a test
+                // fetches questions from /api/tests/[testId]/questions, which strips the
+                // answer key for anyone who is not the owner.
+                _count: { select: { questions: true } },
               },
             },
           },
@@ -45,9 +45,15 @@ export async function GET(
     }
 
     if (!isOwner) {
+      // Drafts stay hidden from students. Merely being signed in is not ownership.
       return NextResponse.json({
         ...testSeries,
-        testChapters: testSeries.testChapters.filter((chapter) => chapter.isPublished),
+        testChapters: testSeries.testChapters
+          .filter((chapter) => chapter.isPublished)
+          .map((chapter) => ({
+            ...chapter,
+            tests: chapter.tests.filter((test) => test.isPublished),
+          })),
       });
     }
 

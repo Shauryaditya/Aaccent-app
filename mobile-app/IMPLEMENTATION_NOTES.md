@@ -99,201 +99,131 @@
 - ✅ Complete navigation structure
 - ✅ API service layer with interceptors
 - ✅ User role management with persistence
-- ✅ Type-safe TypeScript throughout
+- ✅ Type-safe TypeScript throughout (`npx tsc --noEmit` is clean)
 - ✅ Material Design UI components
 - ✅ Loading and empty states
 - ✅ Error handling with toasts
 - ✅ Pull-to-refresh on lists
+- ✅ Clerk Google OAuth sign-in
 
 ### Student App
-- ✅ Course browsing with categories
-- ✅ Course search
-- ✅ Course detail view
+- ✅ Course browsing with categories and search
+- ✅ Course detail view with paywall
 - ✅ Chapter list with progress indicators
 - ✅ Video player for chapters
 - ✅ Mark chapters complete/incomplete
 - ✅ View purchased courses
 - ✅ View assigned goals
+- ✅ Test series browsing and detail
+- ✅ Photo submission for test chapters (UploadThing)
+- ✅ Resources library with category/type/subject filters
+- ✅ Razorpay checkout for courses and test series
 - ✅ Profile with role switching
 
 ### Teacher App
-- ✅ Basic profile screen
-- ✅ Role switching capability
-- ✅ Navigation structure ready
+- ✅ Dashboard with enrolment, revenue and submission stats
+- ✅ Course CRUD and chapter management
+- ✅ Test series CRUD and test chapter management
+- ✅ Objective test creation (`CreateTestScreen`)
+- ✅ Test list with publish toggle (`ManageTestsScreen`)
+- ✅ Question bank editor with options and answer keys (`ManageQuestionsScreen`)
+- ✅ Student roster and per-student progress reports
+- ✅ Goal assignment tied to a course or test series
+- ✅ Test submission review with annotated file upload
 
 ---
 
-## 🚧 Features Requiring Implementation
+## 🚧 Features Still Outstanding
 
-### High Priority (Core Functionality)
+### Student objective test-taking
+**Locations**: `src/screens/student/TakeTestScreen.tsx`, `src/screens/student/TestResultScreen.tsx`
 
-#### 1. Complete Clerk Authentication
-**Current State**: Placeholder login screen
-**Needed**: 
-- Full Clerk OAuth integration
-- Social login (Google, etc.)
-- Email/password flow
-- Token refresh handling
+Both are still `EmptyState` placeholders. Teachers can now build objective tests
+(questions, options, marks, negative marking) via the question bank, and
+`GET /api/tests/:testId/questions` already strips the answer key for non-owners,
+so the student-facing half is the remaining work:
 
-**Implementation Guide**:
-```typescript
-// In LoginScreen.tsx
-import { useOAuth } from '@clerk/clerk-expo';
+- Timer + question navigator UI
+- Answer selection per question type (single, multiple, numerical, true/false)
+- Submit-and-score flow
 
-const { startOAuthFlow } = useOAuth({ strategy: 'oauth_google' });
+The `TestAttempt` and `Answer` Prisma models exist, but **no API routes back them
+yet**. Taking a test end to end needs:
 
-const handleGoogleSignIn = async () => {
-  const { createdSessionId } = await startOAuthFlow();
-  // Handle successful authentication
-};
+- `POST /api/tests/:testId/attempt` — start (or resume) an attempt
+- `PATCH /api/attempts/:attemptId/answers` — save an answer
+- `POST /api/attempts/:attemptId/complete` — grade and close the attempt
+- `GET /api/attempts/:attemptId` — attempt with results for `TestResultScreen`
+
+### Chapter (course) assignment submissions
+`submissionService.submitChapterAssignment` and the supporting routes exist, but
+no screen navigates to `SubmitAssignment` with a `courseId`/`chapterId` pair yet
+— only the test-chapter flow is wired up.
+
+### Email/password sign-up
+`SignUpScreen.tsx` is still a shell. Google OAuth covers sign-up today, so this
+only matters if you want a non-Google option.
+
+---
+
+## 🔌 Backend Routes Added For Mobile
+
+These were added to the Next.js app so the mobile services resolve. All are
+additive — no existing web route or page was changed.
+
+| Route | Methods | Purpose |
+|---|---|---|
+| `/api/resources` | `GET` (added) | Resources library listing with filters |
+| `/api/student/profile` | `GET` (added) | Read own student profile |
+| `/api/goals` | `POST` | Create a goal for a course or test series |
+| `/api/goals/teacher` | `GET` | Goals the teacher has assigned |
+| `/api/submissions/chapters` | `GET` | Student's own chapter submissions |
+| `/api/submissions/chapters/all` | `GET` | Teacher's inbox of chapter submissions |
+| `/api/submissions/chapters/:submissionId/review` | `PATCH` | Review without course/chapter ids in path |
+| `/api/students` | `GET` | Teacher's enrolled-student roster (Clerk-resolved) |
+| `/api/students/:studentId/progress` | `GET` | Per-student progress report |
+| `/api/tests` | `GET`, `POST` | List/create tests in a test chapter |
+| `/api/tests/:testId` | `GET`, `PATCH`, `DELETE` | Test CRUD, publish via `isPublished` |
+| `/api/tests/:testId/questions` | `GET`, `POST` | Question bank (answer key stripped for non-owners) |
+| `/api/questions/:questionId` | `PATCH`, `DELETE` | Edit/delete a question and its options |
+| `/api/teacher/stats` | `GET` | Dashboard aggregates |
+| `/api/payments/link` | `POST` | Create a Razorpay Payment Link |
+| `/api/payments/verify` | `POST` | Confirm payment with Razorpay, grant access |
+| `/api/payments/entitlements` | `GET` | What the user has already paid for |
+
+**Ownership rules**: every teacher route resolves ownership through the parent
+record (`test → testChapter → testSeries.userId`, `chapterSubmission → chapter →
+course.userId`) rather than trusting an id from the client.
+
+---
+
+## 💳 How Mobile Payments Work
+
+The app does **not** bundle `react-native-razorpay`. That is a native module and
+would break Expo Go for the whole team. Instead it uses Razorpay **Payment
+Links**:
+
+1. `POST /api/payments/link` creates a link server-side (price read from the DB,
+   never from the client) and stores `{ userId, type, itemId }` in the link's notes.
+2. The app opens `link.short_url` with `WebBrowser.openBrowserAsync`.
+3. When the browser closes, `POST /api/payments/verify` fetches the link from
+   Razorpay, checks `status === 'paid'` **and** that `notes.userId` matches the
+   caller, then creates the `Purchase` / `TestSeriesPurchase` idempotently.
+
+Because the paid status is read from Razorpay rather than sent by the client, a
+user dismissing the browser early just sees "payment not completed".
+
+**Required env vars** (not currently in `.env`):
+
+```
+RAZORPAY_KEY_ID=rzp_test_xxx
+RAZORPAY_KEY_SECRET=xxx
 ```
 
-#### 2. Razorpay Payment Integration
-**Location**: `src/screens/student/CourseDetailScreen.tsx`
-**Needed**:
-- Razorpay SDK integration
-- Payment flow UI
-- Order creation API call
-- Payment verification
-- Purchase confirmation
+Without them `/api/payments/*` returns `503 Payments are not configured`.
 
-**Implementation Guide**:
-```typescript
-import RazorpayCheckout from 'react-native-razorpay';
-
-const handlePayment = async (courseId: string, amount: number) => {
-  // 1. Create order on backend
-  const order = await apiService.post('/api/razorpay/order', {
-    courseId,
-    amount
-  });
-
-  // 2. Show Razorpay checkout
-  const options = {
-    key: RAZORPAY_KEY_ID,
-    amount: amount * 100,
-    order_id: order.id,
-    name: 'LMS Platform',
-    // ... other options
-  };
-
-  const data = await RazorpayCheckout.open(options);
-  
-  // 3. Verify payment on backend
-  await apiService.post('/api/razorpay/verify', {
-    razorpay_order_id: data.razorpay_order_id,
-    razorpay_payment_id: data.razorpay_payment_id,
-    razorpay_signature: data.razorpay_signature
-  });
-};
-```
-
-#### 3. Test Taking Interface
-**Location**: `src/screens/student/TakeTestScreen.tsx`
-**Needed**:
-- Question display with options
-- Answer selection
-- Timer functionality
-- Progress indicator
-- Submit test flow
-- Handle different question types (single, multiple, numerical)
-
-#### 4. Assignment Submission
-**Location**: `src/screens/student/SubmitAssignmentScreen.tsx`
-**Needed**:
-- Image picker integration
-- Multiple image upload
-- Preview selected images
-- Upload progress indicator
-- Submit to backend
-
-**Implementation Guide**:
-```typescript
-import * as ImagePicker from 'expo-image-picker';
-
-const pickImages = async () => {
-  const result = await ImagePicker.launchImageLibraryAsync({
-    mediaTypes: ImagePicker.MediaTypeOptions.Images,
-    allowsMultipleSelection: true,
-    quality: 0.8,
-  });
-
-  if (!result.canceled) {
-    // Upload images
-    const uploadPromises = result.assets.map(asset =>
-      submissionService.uploadImage(asset.uri)
-    );
-    const urls = await Promise.all(uploadPromises);
-    
-    // Submit assignment
-    await submissionService.submitChapterAssignment(chapterId, urls);
-  }
-};
-```
-
-### Medium Priority (Teacher Features)
-
-#### 5. Course Management (Teacher)
-**Locations**: 
-- `src/screens/teacher/CreateCourseScreen.tsx`
-- `src/screens/teacher/EditCourseScreen.tsx`
-- `src/screens/teacher/ManageChaptersScreen.tsx`
-
-**Needed**:
-- Form for course creation
-- Image upload for course cover
-- Chapter CRUD operations
-- Drag-and-drop chapter reordering
-- Video upload/link for chapters
-
-#### 6. Test Series Management (Teacher)
-**Locations**:
-- `src/screens/teacher/CreateTestSeriesScreen.tsx`
-- `src/screens/teacher/ManageQuestionsScreen.tsx`
-
-**Needed**:
-- Test series creation form
-- Test creation with settings
-- Question bank interface
-- Add/edit/delete questions
-- Support for different question types
-
-#### 7. Submission Review (Teacher)
-**Location**: `src/screens/teacher/ReviewSubmissionScreen.tsx`
-**Needed**:
-- View student submissions
-- Image annotation tools (for chapter submissions)
-- PDF annotation (for test submissions)
-- Grading interface
-- Feedback text input
-- Mark as reviewed/needs revision
-
-### Low Priority (Nice to Have)
-
-#### 8. Resources Library
-**Location**: `src/screens/student/ResourcesScreen.tsx`
-**Needed**:
-- Browse resources by category
-- Filter by subject, grade, year
-- Download/view resources
-- PDF viewer for documents
-
-#### 9. Analytics Dashboard (Teacher)
-**Location**: `src/screens/teacher/TeacherDashboardScreen.tsx`
-**Needed**:
-- Charts for course enrollment
-- Student progress overview
-- Test performance metrics
-- Recent activity feed
-
-#### 10. Goal Management (Teacher)
-**Location**: `src/screens/teacher/AssignGoalScreen.tsx`
-**Needed**:
-- Student selection
-- Course/test series selection
-- Due date picker
-- Goal description input
-- Submit goal assignment
+The shared flow lives in `src/hooks/usePurchase.ts` — use it rather than calling
+`paymentService` directly, so entitlement caches invalidate consistently.
 
 ---
 
@@ -453,11 +383,13 @@ const pickDocument = async () => {
 
 ### Current Limitations
 
-1. **Authentication**: Simplified Clerk implementation - needs full OAuth flow
+1. **Objective test-taking**: teachers can author tests, students cannot yet sit them (see above)
 2. **Video Upload**: Teachers can't upload videos from mobile - use web app
-3. **PDF Annotation**: Complex annotation features better suited for web
+3. **PDF Annotation**: reviewers upload an annotated file rather than annotating in-app
 4. **Offline Mode**: Not implemented - requires network connection
 5. **Push Notifications**: Structure exists but not fully integrated
+6. **Payments**: needs `RAZORPAY_KEY_ID` / `RAZORPAY_KEY_SECRET` set on the server
+7. **Large uploads**: `uploadThingService` rejects files needing multipart (>16MB)
 
 ### Performance Considerations
 

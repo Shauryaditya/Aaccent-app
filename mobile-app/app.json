@@ -1,34 +1,42 @@
-﻿{
-    "expo":  {
-                 "name":  "LMS Mobile",
-                 "slug":  "lms-mobile-app",
-                 "version":  "1.0.0",
-                 "orientation":  "portrait",
-                 "icon":  "./assets/logo.png",
-                 "userInterfaceStyle":  "automatic",
-                 "assetBundlePatterns":  [
-                                             "**/*"
-                                         ],
-                 "ios":  {
-                             "supportsTablet":  true,
-                             "bundleIdentifier":  "com.lms.mobileapp"
-                         },
-                 "android":  {
-                                 "adaptiveIcon":  {
-                                                      "foregroundImage":  "./assets/logo.png",
-                                                      "backgroundColor":  "#ffffff"
-                                                  },
-                                 "package":  "com.lms.mobileapp"
-                             },
-                 "web":  {
-                             "favicon":  "./assets/logo.png"
-                         },
-                 "plugins":  [
-                                 "expo-secure-store"
-                             ],
-                 "extra":  {
-                               "clerkPublishableKey":  "pk_test_c2hpbmluZy1tb29zZS0zNS5jbGVyay5hY2NvdW50cy5kZXYk",
-                               "apiBaseUrl":  "http://192.168.1.11:3000"
-                           }
-             }
+{
+  "expo": {
+    "name": "LMS Mobile",
+    "slug": "lms-mobile-app",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/logo.png",
+    "userInterfaceStyle": "automatic",
+    "scheme": "lmsmobile",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "splash": {
+      "image": "./assets/logo.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.lms.mobileapp",
+      "buildNumber": "1"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/logo.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.lms.mobileapp",
+      "versionCode": 1
+    },
+    "web": {
+      "favicon": "./assets/logo.png"
+    },
+    "plugins": [
+      "expo-secure-store"
+    ],
+    "extra": {
+      "clerkPublishableKey": "pk_test_c2hpbmluZy1tb29zZS0zNS5jbGVyay5hY2NvdW50cy5kZXYk",
+      "apiBaseUrl": "http://192.168.1.6:3000"
+    }
+  }
 }

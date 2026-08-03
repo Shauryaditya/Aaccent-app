@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
+import { isTeacher } from "@/lib/teacher";
 export async function GET(
   req: Request,
 ) {
@@ -51,6 +52,12 @@ export async function POST(
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    // Nested routes derive permission from owning the parent course, but creation has
+    // no parent — without this check any signed-in user could create courses.
+    if (!isTeacher(userId)) {
+      return new NextResponse("Only teachers can create courses", { status: 403 });
     }
 
     const course = await db.course.create({

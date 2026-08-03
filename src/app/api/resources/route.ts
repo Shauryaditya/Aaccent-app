@@ -5,6 +5,37 @@ import { auth } from "@clerk/nextjs";
 import { db } from "@/lib/db";
 import { isTeacher } from "@/lib/teacher";
 
+export const dynamic = "force-dynamic";
+
+export async function GET(req: Request) {
+  try {
+    const { searchParams } = new URL(req.url);
+    const category = searchParams.get("category") || undefined;
+    const type = searchParams.get("type") || undefined;
+    const subject = searchParams.get("subject") || undefined;
+    const grade = searchParams.get("grade") || undefined;
+    const year = searchParams.get("year");
+    const title = searchParams.get("title") || undefined;
+
+    const resources = await db.resource.findMany({
+      where: {
+        ...(category ? { category: category as any } : {}),
+        ...(type ? { type: type as any } : {}),
+        ...(subject ? { subject: { equals: subject, mode: "insensitive" } } : {}),
+        ...(grade ? { grade } : {}),
+        ...(year ? { year: Number(year) } : {}),
+        ...(title ? { title: { contains: title, mode: "insensitive" } } : {}),
+      },
+      orderBy: [{ year: "desc" }, { createdAt: "desc" }],
+    });
+
+    return NextResponse.json(resources);
+  } catch (error) {
+    console.log("[RESOURCES_GET]", error);
+    return new NextResponse("Internal Error", { status: 500 });
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const { userId } = auth();

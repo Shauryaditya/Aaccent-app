@@ -1,10 +1,10 @@
-import Constants from 'expo-constants';
-import { getAuthToken } from './api';
+import { uploadFiles } from '../lib/uploadthing';
 
-const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl || 'http://localhost:3000';
-const UPLOADTHING_VERSION = '6.7.0';
-
-type UploadThingEndpoint = 'courseAttachment' | 'testChapterAttachment' | 'testSubmission' | 'chapterSubmission';
+type UploadThingEndpoint =
+  | 'courseAttachment'
+  | 'testChapterAttachment'
+  | 'testSubmission'
+  | 'chapterSubmission';
 
 type UploadableFile = {
   uri: string;
@@ -21,137 +21,40 @@ type UploadThingFile = {
   url: string;
 };
 
-type PresignedPost = {
-  url: string;
-  fields: Record<string, string>;
-  key: string;
-  fileName: string;
-  pollingUrl?: string;
-  pollingJwt?: string;
-};
-
-type MultipartPresigned = {
-  urls: string[];
-  chunkSize: number;
-  key: string;
-  fileName: string;
-  uploadId: string;
-  contentDisposition: string;
-  pollingUrl?: string;
-  pollingJwt?: string;
-};
-
-const getUploadHeaders = async () => {
-  const token = await getAuthToken();
-
-  return {
-    'Content-Type': 'application/json',
-    'x-uploadthing-package': 'uploadthing/client',
-    'x-uploadthing-version': UPLOADTHING_VERSION,
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-};
-
-const reportUploadEvent = async <T>(
-  endpoint: UploadThingEndpoint,
-  actionType: string,
-  payload: unknown
-): Promise<T> => {
-  const url = `${API_BASE_URL}/api/uploadthing?actionType=${actionType}&slug=${endpoint}`;
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: await getUploadHeaders(),
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    const message = await response.text();
-    throw new Error(message || `UploadThing ${actionType} failed`);
-  }
-
-  return response.json();
-};
-
-const uploadPresignedPost = (file: UploadableFile, presigned: PresignedPost) => {
-  const formData = new FormData();
-  Object.entries(presigned.fields).forEach(([key, value]) => {
-    formData.append(key, value);
-  });
-  formData.append('file', {
-    uri: file.uri,
-    name: file.name,
-    type: file.type,
-  } as any);
-
-  return fetch(presigned.url, {
-    method: 'POST',
-    body: formData,
-  }).then(async (response) => {
-    if (!response.ok) {
-      throw new Error(await response.text() || 'Storage upload failed');
-    }
-  });
-};
-
-const pollUploadComplete = async (presigned: PresignedPost | MultipartPresigned) => {
-  if (!presigned.pollingUrl || !presigned.pollingJwt) {
-    return null;
-  }
-
-  for (let attempt = 0; attempt < 10; attempt += 1) {
-    const response = await fetch(presigned.pollingUrl, {
-      headers: {
-        authorization: presigned.pollingJwt,
-      },
-    });
-    const data = await response.json();
-    if (data.status === 'done') {
-      return data.callbackData || null;
-    }
-    await new Promise((resolve) => setTimeout(resolve, 500 + attempt * 250));
-  }
-
-  return null;
-};
-
+/**
+ * Thin wrapper over UploadThing's official Expo client.
+ *
+ * This previously hand-implemented the v6 presign/POST/poll protocol, which broke when
+ * UploadThing stopped serving those endpoints. The signature is unchanged so existing
+ * call sites keep working, but the wire protocol is now the library's problem, and
+ * large files no longer need special multipart handling.
+ */
 export const uploadThingService = {
   uploadFile: async (
     endpoint: UploadThingEndpoint,
     file: UploadableFile
   ): Promise<UploadThingFile> => {
-    const presignedList = await reportUploadEvent<Array<PresignedPost | MultipartPresigned>>(
-      endpoint,
-      'upload',
-      {
-        input: null,
-        files: [
-          {
-            name: file.name,
-            size: file.size,
-            type: file.type,
-          },
-        ],
-      }
-    );
+    // React Native can read a local file:// URI through fetch and hand back a Blob.
+    const blob = await fetch(file.uri).then((response) => response.blob());
 
-    const presigned = presignedList[0];
-    if (!presigned) {
-      throw new Error('UploadThing did not return an upload URL');
+    // React Native's FormData only accepts a file-like object that carries a `uri`;
+    // without it the upload fails. This mirrors what @uploadthing/expo's own pickers do.
+    const nativeFile = Object.assign(new File([blob], file.name, { type: file.type }), {
+      uri: file.uri,
+    });
+
+    const [uploaded] = await uploadFiles(endpoint, { files: [nativeFile] });
+
+    if (!uploaded) {
+      throw new Error('Upload completed but UploadThing returned no file');
     }
-
-    if ('urls' in presigned) {
-      throw new Error('Large multipart mobile uploads are not wired yet. Use a file under 16MB for attachments.');
-    }
-
-    await uploadPresignedPost(file, presigned);
-    await pollUploadComplete(presigned);
 
     return {
-      name: file.name,
-      size: file.size,
+      name: uploaded.name,
+      size: uploaded.size,
       type: file.type,
-      key: presigned.key,
-      url: `https://utfs.io/f/${presigned.key}`,
+      key: uploaded.key,
+      url: uploaded.ufsUrl,
     };
   },
 };

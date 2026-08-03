@@ -2,12 +2,32 @@ import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { Text, Card } from 'react-native-paper';
 import { Ionicons } from '@expo/vector-icons';
+import { useQuery } from '@tanstack/react-query';
 import { useUserRole } from '../../contexts/UserContext';
+import { meService } from '../../services/studentService';
+import { showToast } from '../../utils/helpers';
 
 const RoleSelectionScreen: React.FC = () => {
   const { setRole } = useUserRole();
 
+  // The server decides who may teach; this only avoids letting someone into a portal
+  // that would reject every write with a 403.
+  const { data: me } = useQuery({
+    queryKey: ['me'],
+    queryFn: meService.getMe,
+  });
+
+  const canTeach = me?.isTeacher ?? false;
+
   const handleRoleSelect = (role: 'student' | 'teacher') => {
+    if (role === 'teacher' && !canTeach) {
+      showToast(
+        'info',
+        'Teacher access not enabled',
+        'Ask an administrator to enable teaching on your account.'
+      );
+      return;
+    }
     setRole(role);
   };
 
@@ -47,16 +67,18 @@ const RoleSelectionScreen: React.FC = () => {
             onPress={() => handleRoleSelect('teacher')}
             activeOpacity={0.7}
           >
-            <Card style={styles.card}>
+            <Card style={[styles.card, !canTeach && styles.cardDisabled]}>
               <Card.Content style={styles.cardContent}>
                 <View style={styles.iconContainer}>
-                  <Ionicons name="person" size={64} color="#16a34a" />
+                  <Ionicons name="person" size={64} color={canTeach ? '#16a34a' : '#9ca3af'} />
                 </View>
                 <Text variant="headlineSmall" style={styles.roleTitle}>
                   I'm a Teacher
                 </Text>
                 <Text variant="bodyMedium" style={styles.roleDescription}>
-                  Create courses, manage tests, and monitor student progress
+                  {canTeach
+                    ? 'Create courses, manage tests, and monitor student progress'
+                    : 'Not enabled for this account'}
                 </Text>
               </Card.Content>
             </Card>
@@ -99,6 +121,9 @@ const styles = StyleSheet.create({
   },
   card: {
     elevation: 3,
+  },
+  cardDisabled: {
+    opacity: 0.55,
   },
   cardContent: {
     alignItems: 'center',

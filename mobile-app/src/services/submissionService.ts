@@ -2,8 +2,13 @@ import { ChapterSubmission, TestSubmission } from '../types';
 import apiService from './api';
 
 export const submissionService = {
-  submitChapterAssignment: async (chapterId: string, images: string[]): Promise<ChapterSubmission> => {
-    return apiService.post(`/api/submissions/chapters/${chapterId}`, { images });
+  // Chapter submissions are namespaced under their owning course in the backend.
+  submitChapterAssignment: async (
+    courseId: string,
+    chapterId: string,
+    images: string[]
+  ): Promise<ChapterSubmission> => {
+    return apiService.post(`/api/courses/${courseId}/chapters/${chapterId}/submissions`, { images });
   },
 
   getChapterSubmissions: async (chapterId?: string): Promise<ChapterSubmission[]> => {
@@ -50,6 +55,8 @@ export const submissionService = {
       annotatedImageUrls?: string[];
     }
   ): Promise<TestSubmission> => {
-    return apiService.patch(`/api/submissions/tests/${submissionId}/review`, data);
+    // `review` sits before the id: a sibling `[submissionId]` segment would clash
+    // with `[testChapterId]` at the same level, which Next.js rejects.
+    return apiService.patch(`/api/submissions/tests/review/${submissionId}`, data);
   },
 };

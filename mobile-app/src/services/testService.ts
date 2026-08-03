@@ -1,5 +1,31 @@
-import { TestSeries, TestChapter, Test, Question, TestAttempt, Answer, Attachment, ApiResponse } from '../types';
+import { TestSeries, TestChapter, Test, Question, Attachment, TestAttempt } from '../types';
 import apiService from './api';
+
+export const attemptService = {
+  // Start a test, or resume the one already in progress (one attempt per test).
+  start: async (testId: string): Promise<TestAttempt & { resumed: boolean }> => {
+    return apiService.post(`/api/tests/${testId}/attempt`);
+  },
+
+  // Full attempt. The answer key is only included once the attempt is submitted.
+  get: async (attemptId: string): Promise<TestAttempt> => {
+    return apiService.get(`/api/attempts/${attemptId}`);
+  },
+
+  // Save one answer. Pass null to clear it.
+  saveAnswer: async (
+    attemptId: string,
+    questionId: string,
+    selectedAnswer: string | null
+  ): Promise<{ id: string; questionId: string; selectedAnswer: string | null }> => {
+    return apiService.put(`/api/attempts/${attemptId}/answers`, { questionId, selectedAnswer });
+  },
+
+  // Submit and grade. Safe to call twice — the score is computed once.
+  complete: async (attemptId: string): Promise<TestAttempt & { alreadySubmitted: boolean }> => {
+    return apiService.post(`/api/attempts/${attemptId}/complete`);
+  },
+};
 
 export const testService = {
   // Get all published test series
@@ -21,52 +47,19 @@ export const testService = {
     return apiService.get(`/api/testseries/${testSeriesId}/testChapter`);
   },
 
-  // Get tests for a chapter
+  // Get tests for a chapter. Owners also receive unpublished drafts.
   getTests: async (testChapterId: string): Promise<Test[]> => {
-    return apiService.get(`/api/testseries/testChapter/${testChapterId}/tests`);
+    return apiService.get('/api/tests', { testChapterId });
   },
 
   // Get test by ID
   getTestById: async (testId: string): Promise<Test> => {
-    return apiService.get(`/api/testseries/tests/${testId}`);
+    return apiService.get(`/api/tests/${testId}`);
   },
 
-  // Get test with questions
-  getTestWithQuestions: async (testId: string): Promise<Test> => {
-    return apiService.get(`/api/testseries/tests/${testId}/questions`);
-  },
-
-  // Start test attempt
-  startTestAttempt: async (testId: string): Promise<TestAttempt> => {
-    return apiService.post(`/api/testseries/tests/${testId}/attempt`);
-  },
-
-  // Submit answer
-  submitAnswer: async (
-    attemptId: string,
-    questionId: string,
-    answer: string
-  ): Promise<Answer> => {
-    return apiService.post(`/api/testseries/attempts/${attemptId}/answers`, {
-      questionId,
-      selectedAnswer: answer,
-    });
-  },
-
-  // Complete test attempt
-  completeTestAttempt: async (attemptId: string): Promise<TestAttempt> => {
-    return apiService.post(`/api/testseries/attempts/${attemptId}/complete`);
-  },
-
-  // Get test attempt with results
-  getTestAttempt: async (attemptId: string): Promise<TestAttempt> => {
-    return apiService.get(`/api/testseries/attempts/${attemptId}`);
-  },
-
-  // Get user's test attempts
-  getUserAttempts: async (testId?: string): Promise<TestAttempt[]> => {
-    const params = testId ? { testId } : undefined;
-    return apiService.get('/api/testseries/attempts', params);
+  // Get a test's questions. The answer key is stripped for non-owners.
+  getQuestions: async (testId: string): Promise<Question[]> => {
+    return apiService.get(`/api/tests/${testId}/questions`);
   },
 
   // Teacher: Get test series owned by current teacher
@@ -110,6 +103,7 @@ export const testService = {
   ): Promise<void> => {
     return apiService.delete(`/api/testseries/${testSeriesId}/testChapter/${testChapterId}/attachments/${attachmentId}`);
   },
+
   // Teacher: Create test series
   createTestSeries: async (data: Partial<TestSeries>): Promise<TestSeries> => {
     return apiService.post('/api/testseries', data);
@@ -120,18 +114,58 @@ export const testService = {
     return apiService.patch(`/api/testseries/${testSeriesId}`, data);
   },
 
-  // Teacher: Create test
-  createTest: async (testChapterId: string, data: Partial<Test>): Promise<Test> => {
-    return apiService.post(`/api/testseries/testChapter/${testChapterId}/tests`, data);
+  // Teacher: Create a test inside a test chapter
+  createTest: async (
+    testChapterId: string,
+    data: {
+      title: string;
+      description?: string;
+      duration?: number;
+      totalMarks?: number;
+      passingMarks?: number | null;
+      testMode?: Test['testMode'];
+      isFree?: boolean;
+    }
+  ): Promise<Test> => {
+    return apiService.post('/api/tests', { testChapterId, ...data });
   },
 
-  // Teacher: Create question
-  createQuestion: async (testId: string, data: Partial<Question>): Promise<Question> => {
-    return apiService.post(`/api/testseries/tests/${testId}/questions`, data);
+  // Teacher: Update a test (publish/unpublish goes through isPublished)
+  updateTest: async (testId: string, data: Partial<Test>): Promise<Test> => {
+    return apiService.patch(`/api/tests/${testId}`, data);
   },
 
-  // Teacher: Update question
-  updateQuestion: async (questionId: string, data: Partial<Question>): Promise<Question> => {
-    return apiService.patch(`/api/testseries/questions/${questionId}`, data);
+  // Teacher: Delete a test
+  deleteTest: async (testId: string): Promise<void> => {
+    return apiService.delete(`/api/tests/${testId}`);
+  },
+
+  // Teacher: Create a question with its options
+  createQuestion: async (
+    testId: string,
+    data: {
+      questionText: string;
+      questionType: Question['questionType'];
+      marks: number;
+      negativeMarks?: number;
+      explanation?: string;
+      imageUrl?: string;
+      options?: Array<{ optionText: string; isCorrect: boolean }>;
+    }
+  ): Promise<Question> => {
+    return apiService.post(`/api/tests/${testId}/questions`, data);
+  },
+
+  // Teacher: Update a question. Supplying options replaces the existing set.
+  updateQuestion: async (
+    questionId: string,
+    data: Omit<Partial<Question>, 'options'> & { options?: Array<{ optionText: string; isCorrect: boolean }> }
+  ): Promise<Question> => {
+    return apiService.patch(`/api/questions/${questionId}`, data);
+  },
+
+  // Teacher: Delete a question
+  deleteQuestion: async (questionId: string): Promise<void> => {
+    return apiService.delete(`/api/questions/${questionId}`);
   },
 };

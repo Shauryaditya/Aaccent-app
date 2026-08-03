@@ -7,6 +7,7 @@ import { useQuery } from '@tanstack/react-query';
 import * as WebBrowser from 'expo-web-browser';
 import { StudentStackParamList, Attachment, Chapter, Course } from '../../types';
 import { courseService } from '../../services/courseService';
+import { usePurchase } from '../../hooks/usePurchase';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import ChapterCard from '../../components/common/ChapterCard';
 import ProgressBar from '../../components/common/ProgressBar';
@@ -27,8 +28,10 @@ const CourseDetailScreen: React.FC = () => {
     queryFn: () => courseService.getCourseWithProgress(courseId),
   });
 
-  const handleEnroll = async () => {
-    showToast('info', 'Payment Integration', 'Razorpay integration to be implemented');
+  const { hasCourse, purchase, isPurchasing, isLoadingEntitlements } = usePurchase();
+
+  const handleEnroll = () => {
+    purchase({ type: 'course', id: courseId });
   };
 
   const handleChapterPress = (chapterId: string) => {
@@ -47,7 +50,7 @@ const CourseDetailScreen: React.FC = () => {
     return <LoadingSpinner message="Loading course details..." />;
   }
 
-  const isPurchased = course.progress !== undefined;
+  const isPurchased = hasCourse(courseId) || course.progress !== undefined;
   const chapters = course.chapters || [];
   const attachments = course.attachments || [];
 
@@ -81,14 +84,23 @@ const CourseDetailScreen: React.FC = () => {
           </View>
         )}
 
-        {!isPurchased && course.price !== undefined && course.price > 0 && (
+        {!isPurchased && !isLoadingEntitlements && course.price !== undefined && course.price > 0 && (
           <View style={styles.priceContainer}>
             <Text variant="headlineSmall" style={styles.price}>
               {formatCurrency(course.price)}
             </Text>
-            <Button mode="contained" onPress={handleEnroll} style={styles.enrollButton}>
-              Enroll Now
+            <Button
+              mode="contained"
+              onPress={handleEnroll}
+              loading={isPurchasing}
+              disabled={isPurchasing}
+              style={styles.enrollButton}
+            >
+              {isPurchasing ? 'Completing payment...' : 'Enroll Now'}
             </Button>
+            <Text variant="bodySmall" style={styles.payNote}>
+              You'll pay securely via Razorpay, then return to the app.
+            </Text>
           </View>
         )}
 
@@ -194,6 +206,11 @@ const styles = StyleSheet.create({
   enrollButton: {
     width: '100%',
     borderRadius: radius.sm,
+  },
+  payNote: {
+    color: colors.muted,
+    marginTop: spacing.sm,
+    textAlign: 'center',
   },
   attachmentsContainer: {
     marginBottom: spacing.xl,

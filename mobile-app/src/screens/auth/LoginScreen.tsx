@@ -3,6 +3,7 @@ import { View, StyleSheet, Image } from 'react-native';
 import { Text, Button } from 'react-native-paper';
 import { useOAuth } from '@clerk/clerk-expo';
 import * as WebBrowser from 'expo-web-browser';
+import * as Linking from 'expo-linking';
 import Toast from 'react-native-toast-message';
 
 WebBrowser.maybeCompleteAuthSession();
@@ -14,7 +15,13 @@ const LoginScreen: React.FC = () => {
   const handleSignIn = async () => {
     setIsSigningIn(true);
     try {
-      const { createdSessionId, setActive } = await startOAuthFlow();
+      // Without an explicit redirectUrl there is no deep link back into the app, so the
+      // browser strands the user on a web page instead of returning them. Combined with
+      // the `scheme` in app.json this makes Clerk use an in-app auth session that
+      // dismisses itself once sign-in completes.
+      const { createdSessionId, setActive } = await startOAuthFlow({
+        redirectUrl: Linking.createURL('oauth-native-callback'),
+      });
 
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });

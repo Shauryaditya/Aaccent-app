@@ -21,6 +21,7 @@ import ManageTestsScreen from '../screens/teacher/ManageTestsScreen';
 import CreateTestScreen from '../screens/teacher/CreateTestScreen';
 import ManageQuestionsScreen from '../screens/teacher/ManageQuestionsScreen';
 import ReviewSubmissionScreen from '../screens/teacher/ReviewSubmissionScreen';
+import StudentsScreen from '../screens/teacher/StudentsScreen';
 import StudentProgressScreen from '../screens/teacher/StudentProgressScreen';
 import AssignGoalScreen from '../screens/teacher/AssignGoalScreen';
 
@@ -137,6 +138,11 @@ const TeacherNavigator: React.FC = () => {
         name="ReviewSubmission"
         component={ReviewSubmissionScreen}
         options={{ title: 'Review Submission' }}
+      />
+      <Stack.Screen
+        name="Students"
+        component={StudentsScreen}
+        options={{ title: 'Students' }}
       />
       <Stack.Screen
         name="StudentProgress"

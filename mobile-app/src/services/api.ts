@@ -4,6 +4,9 @@ import Constants from 'expo-constants';
 // Get API base URL from environment
 const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl || 'http://localhost:3000';
 
+// Exposed so error messages and the diagnostics panel can name the host they tried.
+export const getApiBaseUrl = () => API_BASE_URL;
+
 type AuthTokenGetter = () => Promise<string | null>;
 
 let authTokenGetter: AuthTokenGetter | null = null;

@@ -1,3 +1,7 @@
+// Hermes does not reliably ship TextEncoder/TextDecoder, which UploadThing's runtime
+// needs. Must be imported before anything that pulls in uploadthing.
+import 'text-encoding-polyfill';
+
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';

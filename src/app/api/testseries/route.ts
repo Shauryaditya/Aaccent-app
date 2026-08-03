@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs";
 import { NextResponse } from "next/server";
 
 import { db } from "@/lib/db";
+import { isTeacher } from "@/lib/teacher";
 
 export async function GET(req: Request) {
   try {
@@ -53,6 +54,11 @@ export async function POST(req: Request) {
 
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    // Creation has no parent to derive permission from — see the note in /api/courses.
+    if (!isTeacher(userId)) {
+      return new NextResponse("Only teachers can create test series", { status: 403 });
     }
 
     if (!title || !categoryId) {
